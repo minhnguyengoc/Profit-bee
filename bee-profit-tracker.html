@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BEE Profit Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+    body { background: #080808; font-family: 'DM Serif Display', serif; }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0d0d0d; }
+    ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 3px; }
+
+    /* All inputs — smooth, native feel */
+    input, select, textarea, button {
+      font-family: 'DM Mono', monospace;
+      -webkit-font-smoothing: antialiased;
+    }
+    input, select, textarea {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 6px;
+      padding: 10px 12px;
+      color: #e0e0e0;
+      font-size: 14px;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.15s;
+      /* Critical for smooth typing — no layout shift */
+      will-change: auto;
+    }
+    input:focus, select:focus, textarea:focus { border-color: #444; }
+    input::placeholder, textarea::placeholder { color: #333; }
+    textarea { resize: vertical; }
+    select { cursor: pointer; appearance: none; -webkit-appearance: none; }
+    select option { background: #111; }
+
+    /* Number inputs — remove spinners */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+
+    /* Buttons */
+    button { cursor: pointer; border: none; transition: opacity 0.15s, background 0.15s, color 0.15s; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Nav */
+    .nav-btn { padding: 7px 16px; border: 1px solid transparent; border-radius: 6px; font-size: 12px; letter-spacing: 1px; background: transparent; color: #666; }
+    .nav-btn:hover { background: #1a1a1a !important; color: #d4af37 !important; }
+    .nav-btn.active { background: #1a1a1a; color: #d4af37; border-color: #2a2a2a; }
+    .nav-btn.active-ai { background: #1a1500; color: #d4af37; border-color: #3a3000; }
+
+    /* Cards & layout */
+    .content { padding: 28px; max-width: 960px; margin: 0 auto; }
+    .card { background: #0d0d0d; border: 1px solid #1a1a1a; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+    .card-title { color: #444; font-size: 10px; letter-spacing: 3px; font-family: 'DM Mono', monospace; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #161616; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) { .grid2 { grid-template-columns: 1fr; } }
+
+    /* Hero */
+    .hero-card { background: linear-gradient(135deg, #111 0%, #0e0e0e 100%); border: 1px solid #1e1e1e; border-radius: 12px; padding: 32px 36px; margin-bottom: 20px; text-align: center; }
+    .hero-label { color: #555; font-size: 11px; letter-spacing: 3px; font-family: 'DM Mono', monospace; }
+    .hero-value { color: #d4af37; font-size: 42px; font-family: 'DM Serif Display', serif; margin-top: 8px; }
+    .hero-sub { color: #888; font-family: 'DM Mono', monospace; font-size: 13px; margin-top: 6px; }
+
+    /* Bars */
+    .bar-bg { height: 4px; background: #1a1a1a; border-radius: 2px; }
+    .bar-fill { height: 4px; border-radius: 2px; transition: width 0.5s ease; }
+
+    /* Rows */
+    .ship-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 8px; border-bottom: 1px solid #111; }
+    .ship-row:hover { background: rgba(212,175,55,0.04); }
+    .pill { background: #1a1a1a; color: #666; font-size: 10px; padding: 2px 8px; border-radius: 4px; font-family: 'DM Mono', monospace; letter-spacing: 1px; }
+    .empty { color: #333; font-size: 13px; font-family: 'DM Mono', monospace; padding: 20px 0; text-align: center; }
+
+    /* Field label */
+    .field-label { color: #555; font-size: 10px; letter-spacing: 1.5px; font-family: 'DM Mono', monospace; margin-bottom: 5px; }
+    .field-wrap { margin-bottom: 4px; }
+
+    /* Submit */
+    .btn-gold { background: #d4af37; color: #000; font-weight: 600; font-size: 14px; letter-spacing: 2px; border-radius: 8px; padding: 14px; width: 100%; }
+    .btn-gold:hover { opacity: 0.85; }
+    .btn-gold-auto { background: #d4af37; color: #000; font-weight: 600; font-size: 14px; letter-spacing: 2px; border-radius: 8px; padding: 12px 32px; }
+    .btn-gold-auto:hover { opacity: 0.85; }
+    .btn-saved { background: #2a4a35; color: #4caf7d; font-weight: 600; font-size: 14px; letter-spacing: 2px; border-radius: 8px; padding: 14px; width: 100%; }
+    .btn-small { padding: 5px 10px; background: #1a1a1a; border: 1px solid #222; border-radius: 4px; color: #888; font-size: 12px; font-family: 'DM Mono', monospace; }
+    .btn-danger { padding: 5px 10px; background: #ff4444; border: none; border-radius: 4px; color: #fff; font-size: 12px; font-family: 'DM Mono', monospace; }
+    .del-btn { padding: 5px 10px; background: #1a1a1a; border: 1px solid #222; border-radius: 4px; color: #444; font-size: 12px; }
+    .del-btn:hover { color: #ff4444 !important; }
+
+    /* AI tabs */
+    .ai-tab { padding: 8px 16px; border: 1px solid #1e1e1e; border-radius: 8px; font-size: 11px; background: #0d0d0d; color: #555; }
+    .ai-tab:hover { background: #161616 !important; color: #ccc !important; }
+    .ai-tab.active { background: #1a1500; color: #d4af37; border-color: #3a3000; }
+    .ai-tabs { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
+
+    /* AI result */
+    .ai-result-box { margin-top: 24px; padding: 20px; background: #0a0a0a; border: 1px solid #1e1e1e; border-radius: 8px; border-left: 3px solid #d4af37; }
+    .ai-text { white-space: pre-wrap; line-height: 1.7; color: #ccc; font-family: 'DM Mono', monospace; font-size: 13px; }
+
+    /* Profit preview */
+    .profit-preview { margin-top: 24px; padding: 16px; background: #0a0a0a; border: 1px solid #222; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+
+    /* Animations */
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .pulse { animation: pulse 1.5s infinite; color: #d4af37; font-family: 'DM Mono', monospace; font-size: 13px; }
+
+    /* Sell price input */
+    .sell-price-input { font-size: 20px !important; color: #d4af37 !important; font-weight: 600; }
+    .section-label-gold { color: #d4af37; font-size: 11px; letter-spacing: 2px; font-family: 'DM Mono', monospace; margin-top: 24px; margin-bottom: 8px; }
+    .section-label-gray { color: #888; font-size: 11px; letter-spacing: 2px; font-family: 'DM Mono', monospace; margin-top: 24px; margin-bottom: 8px; }
+    .profit-green { color: #4caf7d; }
+    .profit-red { color: #ff6b6b; }
+    .mono { font-family: 'DM Mono', monospace; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- React + ReactDOM via ESM (no Babel, no compilation lag) -->
+<script type="module">
+import { createElement as h, useState, useEffect, useMemo, useCallback, Fragment } from 'https://esm.sh/react@18.2.0';
+import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
+import htm from 'https://esm.sh/htm@3.1.1';
+const html = htm.bind(h);
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+const MODES   = ["Air","Sea FCL","Sea LCL","Road","Express"];
+const CHARGES = ["Freight","Origin charges","Destination charges","Customs","Insurance","Trucking","Other"];
+const KEY     = "bee-profit-shipments";
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const fVND = (n) => new Intl.NumberFormat("vi-VN",{style:"currency",currency:"VND",maximumFractionDigits:0}).format(n);
+const fUSD = (n) => "$"+new Intl.NumberFormat("en-US",{minimumFractionDigits:0,maximumFractionDigits:0}).format(n);
+const todayStr   = () => new Date().toISOString().split("T")[0];
+const monthStr   = () => new Date().toISOString().slice(0,7);
+const totalCost  = (s) => Object.values(s.charges).reduce((a,v)=>a+(parseFloat(v)||0),0);
+const profit     = (s) => (parseFloat(s.sellPrice)||0) - totalCost(s);
+const profitVND  = (s) => { const p=profit(s); return s.currency==="USD" ? p*s.exchangeRate : p; };
+const profitColor= (n) => n>=0 ? "#4caf7d" : "#ff6b6b";
+const emptyForm  = () => ({
+  id: crypto.randomUUID(), date: todayStr(),
+  customer:"", route:"", mode:"Air",
+  currency:"USD", exchangeRate:26200, sellPrice:"",
+  charges: Object.fromEntries(CHARGES.map(c=>[c,""])), note:""
+});
+
+// ── Claude API ────────────────────────────────────────────────────────────────
+async function askClaude(system, user) {
+  const res = await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:1000, system, messages:[{role:"user",content:user}] })
+  });
+  const d = await res.json();
+  return d.content?.[0]?.text || "No response.";
+}
+
+// ── Small components ──────────────────────────────────────────────────────────
+const Field = ({label, children, style}) => html`
+  <div class="field-wrap" style=${style}>
+    <div class="field-label">${label.toUpperCase()}</div>
+    ${children}
+  </div>`;
+
+const AiResult = ({text, loading}) => {
+  if (!text && !loading) return null;
+  return html`
+    <div class="ai-result-box">
+      ${loading
+        ? html`<div class="pulse">✦ AI is thinking...</div>`
+        : html`<div class="ai-text">${text}</div>`
+      }
+    </div>`;
+};
+
+// ── Add Form (isolated component = only this re-renders on typing) ────────────
+function AddForm({ shipments, onSave }) {
+  const [form, setForm]   = useState(emptyForm());
+  const [saved, setSaved] = useState(false);
+
+  // Reset form when saved externally
+  const setField = useCallback((k,v) => setForm(f=>({...f,[k]:v})), []);
+  const setCharge= useCallback((c,v) => setForm(f=>({...f,charges:{...f.charges,[c]:v}})), []);
+
+  const liveProfit  = profit(form);
+  const liveCost    = totalCost(form);
+  const liveMargin  = form.sellPrice ? Math.round(liveProfit/parseFloat(form.sellPrice)*100) : 0;
+
+  const handleSubmit = () => {
+    if (!form.customer || !form.route || !form.sellPrice) return;
+    onSave([form, ...shipments]);
+    setForm(emptyForm());
+    setSaved(true);
+    setTimeout(()=>setSaved(false), 1200);
+  };
+
+  return html`
+    <div class="card">
+      <div class="card-title">NEW SHIPMENT</div>
+      <div class="grid2">
+        <${Field} label="Customer">
+          <input value=${form.customer} placeholder="e.g. Công ty ABC"
+            onInput=${e=>setField("customer",e.target.value)} />
+        <//>
+        <${Field} label="Route">
+          <input value=${form.route} placeholder="e.g. HCM → LAX"
+            onInput=${e=>setField("route",e.target.value)} />
+        <//>
+        <${Field} label="Date">
+          <input type="date" value=${form.date}
+            onChange=${e=>setField("date",e.target.value)} />
+        <//>
+        <${Field} label="Mode">
+          <select value=${form.mode} onChange=${e=>setField("mode",e.target.value)}>
+            ${MODES.map(m=>html`<option key=${m}>${m}</option>`)}
+          </select>
+        <//>
+        <${Field} label="Currency">
+          <select value=${form.currency} onChange=${e=>setField("currency",e.target.value)}>
+            <option>USD</option><option>VND</option>
+          </select>
+        <//>
+        ${form.currency==="USD" && html`
+          <${Field} label="Exchange Rate (VND/USD)">
+            <input type="number" value=${form.exchangeRate}
+              onInput=${e=>setField("exchangeRate",parseFloat(e.target.value)||26200)} />
+          <//>
+        `}
+      </div>
+
+      <div class="section-label-gold">SELL PRICE TO CUSTOMER</div>
+      <input class="sell-price-input" type="number" value=${form.sellPrice}
+        placeholder="0" onInput=${e=>setField("sellPrice",e.target.value)} />
+
+      <div class="section-label-gray">YOUR COSTS (BUY SIDE)</div>
+      <div class="grid2">
+        ${CHARGES.map(c=>html`
+          <${Field} key=${c} label=${c}>
+            <input type="number" value=${form.charges[c]} placeholder="0"
+              onInput=${e=>setCharge(c,e.target.value)} />
+          <//>
+        `)}
+      </div>
+
+      ${form.sellPrice && html`
+        <div class="profit-preview">
+          <div>
+            <div style=${{color:"#555",fontSize:11,letterSpacing:2}} class="mono">ESTIMATED PROFIT</div>
+            <div style=${{color:profitColor(liveProfit),fontSize:28,fontFamily:"'DM Serif Display',serif",marginTop:4}}>
+              ${form.currency==="USD" ? fUSD(liveProfit) : fVND(liveProfit)}
+            </div>
+            ${form.currency==="USD" && html`
+              <div style=${{color:"#444",fontSize:12}} class="mono">≈ ${fVND(liveProfit*form.exchangeRate)}</div>
+            `}
+          </div>
+          <div style=${{textAlign:"right"}}>
+            <div style=${{color:"#555",fontSize:11}} class="mono">
+              Cost: ${form.currency==="USD" ? fUSD(liveCost) : fVND(liveCost)}
+            </div>
+            <div style=${{color:"#555",fontSize:11,marginTop:4}} class="mono">Margin: ${liveMargin}%</div>
+          </div>
+        </div>
+      `}
+
+      <${Field} label="Note (optional)" style=${{marginTop:16}}>
+        <input value=${form.note} placeholder="Any remarks..."
+          onInput=${e=>setField("note",e.target.value)} />
+      <//>
+
+      <button class=${saved?"btn-saved":"btn-gold"} onClick=${handleSubmit} style=${{marginTop:24}}>
+        ${saved ? "✓ Saved!" : "Save Shipment"}
+      </button>
+    </div>`;
+}
+
+// ── Main App ──────────────────────────────────────────────────────────────────
+function App() {
+  const [shipments, setShipments] = useState([]);
+  const [view, setView]           = useState("dashboard");
+  const [loading, setLoading]     = useState(true);
+  const [delConfirm, setDelConfirm] = useState(null);
+
+  // AI state
+  const [aiView, setAiView]           = useState("analysis");
+  const [aiLoading, setAiLoading]     = useState(false);
+  const [aiResult, setAiResult]       = useState("");
+  const [marginForm, setMarginForm]   = useState({mode:"Air",route:"",buyCost:"",currency:"USD",notes:""});
+  const [quoteInput, setQuoteInput]   = useState("");
+  const [anomalyQ, setAnomalyQ]       = useState("");
+  const [reportMonth, setReportMonth] = useState(monthStr());
+
+  useEffect(()=>{
+    try { const r=localStorage.getItem(KEY); if(r) setShipments(JSON.parse(r)); } catch(_){}
+    setLoading(false);
+  },[]);
+
+  const save = useCallback((updated)=>{
+    setShipments(updated);
+    try { localStorage.setItem(KEY,JSON.stringify(updated)); } catch(_){}
+  },[]);
+
+  const stats = useMemo(()=>{
+    const total = shipments.reduce((a,s)=>a+profitVND(s),0);
+    const byMode = MODES.map(m=>({
+      mode:m,
+      count: shipments.filter(s=>s.mode===m).length,
+      profit: shipments.filter(s=>s.mode===m).reduce((a,s)=>a+profitVND(s),0),
+    }));
+    const monthly={};
+    shipments.forEach(s=>{ const k=s.date.slice(0,7); monthly[k]=(monthly[k]||0)+profitVND(s); });
+    return { total, byMode, sortedMonths: Object.entries(monthly).sort(([a],[b])=>a.localeCompare(b)) };
+  },[shipments]);
+
+  const maxP = Math.max(...stats.byMode.map(m=>Math.abs(m.profit)),1);
+
+  // ── AI runners ──────────────────────────────────────────────────────────────
+  const runAnalysis = async()=>{
+    if(!shipments.length){setAiResult("No shipments yet. Add some first!"); return;}
+    setAiLoading(true); setAiResult("");
+    const data = shipments.map(s=>({date:s.date,customer:s.customer,route:s.route,mode:s.mode,
+      sell:parseFloat(s.sellPrice)||0,cost:totalCost(s),profit:profit(s),
+      margin:parseFloat(s.sellPrice)?Math.round(profit(s)/parseFloat(s.sellPrice)*100):0}));
+    const t = await askClaude(
+      `You are a logistics profit analyst for BEE Logistics Vietnam. Analyze shipment data, give sharp actionable insights. Use bullet points. Under 300 words.`,
+      `Data: ${JSON.stringify(data)}\n1) Most profitable routes 2) Best customers 3) Best mode margins 4) Recommendations`
+    );
+    setAiResult(t); setAiLoading(false);
+  };
+
+  const runMargin = async()=>{
+    if(!marginForm.buyCost||!marginForm.route){setAiResult("Fill in route and buy cost."); return;}
+    setAiLoading(true); setAiResult("");
+    const hist = shipments.filter(s=>s.mode===marginForm.mode).slice(0,5).map(s=>({
+      route:s.route,sell:parseFloat(s.sellPrice)||0,cost:totalCost(s),
+      margin:parseFloat(s.sellPrice)?Math.round(profit(s)/parseFloat(s.sellPrice)*100):0
+    }));
+    const t = await askClaude(
+      `Freight pricing expert, BEE Logistics Vietnam. Give specific price numbers. Under 250 words.`,
+      `Mode:${marginForm.mode} Route:${marginForm.route} BuyCost:${marginForm.buyCost}${marginForm.currency} Notes:${marginForm.notes||"none"}\nPast:${JSON.stringify(hist)}\nSuggest: 1)Recommended 2)Minimum 3)Premium 4)Target margin%`
+    );
+    setAiResult(t); setAiLoading(false);
+  };
+
+  const runQuote = async()=>{
+    if(!quoteInput.trim()){setAiResult("Describe the shipment first."); return;}
+    setAiLoading(true); setAiResult("");
+    const t = await askClaude(
+      `Extract shipment details and return ONLY raw JSON (no markdown, no backticks, no explanation).
+       Keys: customer,route,mode(Air/Sea FCL/Sea LCL/Road/Express),currency(USD/VND),sellPrice,note,
+       charges:{Freight,"Origin charges","Destination charges",Customs,Insurance,Trucking,Other}.
+       Leave unknown numerics as "".`,
+      `Extract from: "${quoteInput}"`
+    );
+    try {
+      const p=JSON.parse(t.trim());
+      // Push to AddForm via a custom event so the form updates
+      window.__beeQuote = p;
+      window.dispatchEvent(new CustomEvent("bee-quote",{detail:p}));
+      setAiResult("✅ Form filled! Switch to '+ Add' tab to review and save.");
+    } catch {
+      setAiResult('Could not parse. Try: "500kg electronics HCM to LA by air, sell $2000, freight $1400, customs $60"');
+    }
+    setAiLoading(false);
+  };
+
+  const runAnomaly = async()=>{
+    if(shipments.length<3){setAiResult("Need at least 3 shipments."); return;}
+    setAiLoading(true); setAiResult("");
+    const targets = anomalyQ
+      ? shipments.filter(s=>s.customer.toLowerCase().includes(anomalyQ.toLowerCase())||s.route.toLowerCase().includes(anomalyQ.toLowerCase()))
+      : shipments.slice(0,10);
+    const baseline = shipments.map(s=>({date:s.date,mode:s.mode,route:s.route,charges:s.charges,cost:totalCost(s),currency:s.currency}));
+    const t = await askClaude(
+      `Freight cost auditor. Flag anomalies vs historical. Mention date+route+charge+amount. Bullet points. Under 300 words.`,
+      `Baseline:${JSON.stringify(baseline)}\nCheck:${JSON.stringify(targets.map(s=>({date:s.date,customer:s.customer,route:s.route,mode:s.mode,charges:s.charges,cost:totalCost(s)})))}`
+    );
+    setAiResult(t); setAiLoading(false);
+  };
+
+  const runReport = async()=>{
+    setAiLoading(true); setAiResult("");
+    const monthly = shipments.filter(s=>s.date.startsWith(reportMonth));
+    if(!monthly.length){setAiResult(`No shipments for ${reportMonth}.`); setAiLoading(false); return;}
+    const t = await askClaude(
+      `Business analyst, BEE Logistics Vietnam. Professional monthly report. Section headers. Specific numbers. Under 400 words.`,
+      `Month:${reportMonth}\nData:${JSON.stringify(monthly.map(s=>({date:s.date,customer:s.customer,route:s.route,mode:s.mode,sell:parseFloat(s.sellPrice)||0,cost:totalCost(s),profit:profit(s),currency:s.currency})))}\n1)📊 Overview 2)🏆 Best route/customer 3)⚠️ Weakest margin 4)📈 Recommendations`
+    );
+    setAiResult(t); setAiLoading(false);
+  };
+
+  const navItems = [["dashboard","Dashboard"],["add","+ Add"],["history","History"],["ai","✦ AI"]];
+  const aiTools  = [{key:"analysis",label:"📊 Analysis"},{key:"margin",label:"💰 Margin Advisor"},{key:"quote",label:"✍️ Quote Generator"},{key:"anomaly",label:"🚨 Anomaly Detector"},{key:"report",label:"📋 Monthly Report"}];
+
+  if(loading) return html`
+    <div style=${{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",color:"#d4af37",fontFamily:"'DM Serif Display',serif",fontSize:22}}>
+      Loading...
+    </div>`;
+
+  return html`
+    <div style=${{background:"#080808",minHeight:"100vh",color:"#e0e0e0"}}>
+
+      <!-- Header -->
+      <div style=${{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"20px 28px",borderBottom:"1px solid #161616"}}>
+        <div>
+          <div style=${{color:"#d4af37",fontSize:22,letterSpacing:3,fontFamily:"'DM Serif Display',serif"}}>BEE PROFIT</div>
+          <div style=${{color:"#444",fontSize:11,fontFamily:"'DM Mono',monospace",letterSpacing:2,marginTop:2}}>Personal Logistics Tracker</div>
+        </div>
+        <div style=${{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"flex-end"}}>
+          ${navItems.map(([v,l])=>html`
+            <button key=${v} class=${`nav-btn ${view===v?(v==="ai"?"active-ai":"active"):""}`}
+              onClick=${()=>{setView(v);setAiResult("");}}>
+              ${l}
+            </button>`
+          )}
+        </div>
+      </div>
+
+      <!-- DASHBOARD -->
+      ${view==="dashboard" && html`
+        <div class="content">
+          <div class="hero-card">
+            <div class="hero-label">TOTAL PROFIT</div>
+            <div class="hero-value">${fVND(stats.total)}</div>
+            <div class="hero-sub">${shipments.length} shipment${shipments.length!==1?"s":""} recorded</div>
+          </div>
+
+          <div class="grid2">
+            <div class="card">
+              <div class="card-title">PROFIT BY MODE</div>
+              ${stats.byMode.filter(m=>m.count>0).length===0
+                ? html`<div class="empty">No shipments yet</div>`
+                : stats.byMode.filter(m=>m.count>0).map(m=>html`
+                  <div key=${m.mode} style=${{marginBottom:14}}>
+                    <div style=${{display:"flex",justifyContent:"space-between",marginBottom:5}}>
+                      <span style=${{color:"#ccc",fontFamily:"'DM Mono',monospace",fontSize:12}}>
+                        ${m.mode} <span style=${{color:"#555"}}>×${m.count}</span>
+                      </span>
+                      <span style=${{color:profitColor(m.profit),fontFamily:"'DM Mono',monospace",fontSize:12}}>
+                        ${fVND(m.profit)}
+                      </span>
+                    </div>
+                    <div class="bar-bg">
+                      <div class="bar-fill" style=${{width:`${Math.abs(m.profit)/maxP*100}%`,background:profitColor(m.profit)}} />
+                    </div>
+                  </div>`)
+              }
+            </div>
+
+            <div class="card">
+              <div class="card-title">MONTHLY TREND</div>
+              ${stats.sortedMonths.length===0
+                ? html`<div class="empty">No data yet</div>`
+                : stats.sortedMonths.slice(-6).map(([month,p])=>html`
+                  <div key=${month} style=${{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid #1a1a1a"}}>
+                    <span style=${{color:"#888",fontFamily:"'DM Mono',monospace",fontSize:12}}>${month}</span>
+                    <span style=${{color:profitColor(p),fontFamily:"'DM Mono',monospace",fontSize:13,fontWeight:500}}>${fVND(p)}</span>
+                  </div>`)
+              }
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">RECENT SHIPMENTS</div>
+            ${shipments.length===0
+              ? html`<div class="empty">No shipments yet — click "+ Add" to start</div>`
+              : shipments.slice(0,5).map(s=>html`
+                <div key=${s.id} class="ship-row">
+                  <div style=${{flex:1}}>
+                    <div style=${{color:"#e0e0e0",fontSize:14,marginBottom:3}}>
+                      ${s.customer} <span style=${{color:"#555"}}>→</span> ${s.route}
+                    </div>
+                    <div style=${{display:"flex",gap:10}}>
+                      <span class="pill">${s.mode}</span>
+                      <span style=${{color:"#555",fontSize:11,fontFamily:"'DM Mono',monospace"}}>${s.date}</span>
+                    </div>
+                  </div>
+                  <div style=${{textAlign:"right"}}>
+                    <div style=${{color:profitColor(profit(s)),fontFamily:"'DM Mono',monospace",fontSize:15,fontWeight:500}}>
+                      ${s.currency==="USD"?fUSD(profit(s)):fVND(profit(s))}
+                    </div>
+                    <div style=${{color:"#444",fontSize:11,fontFamily:"'DM Mono',monospace"}}>profit</div>
+                  </div>
+                </div>`)
+            }
+          </div>
+        </div>
+      `}
+
+      <!-- ADD -->
+      ${view==="add" && html`
+        <div class="content">
+          <${AddForm} shipments=${shipments} onSave=${save} />
+        </div>
+      `}
+
+      <!-- HISTORY -->
+      ${view==="history" && html`
+        <div class="content">
+          <div class="card">
+            <div class="card-title">ALL SHIPMENTS (${shipments.length})</div>
+            ${shipments.length===0
+              ? html`<div class="empty">No shipments recorded yet</div>`
+              : shipments.map(s=>html`
+                <div key=${s.id} class="ship-row" style=${{flexWrap:"wrap",gap:12}}>
+                  <div style=${{flex:1,minWidth:200}}>
+                    <div style=${{color:"#e0e0e0",fontSize:14,marginBottom:4}}>
+                      ${s.customer} <span style=${{color:"#555"}}>→</span> ${s.route}
+                    </div>
+                    <div style=${{display:"flex",gap:8,flexWrap:"wrap"}}>
+                      <span class="pill">${s.mode}</span>
+                      <span style=${{color:"#555",fontSize:11,fontFamily:"'DM Mono',monospace"}}>${s.date}</span>
+                      <span style=${{color:"#444",fontSize:11,fontFamily:"'DM Mono',monospace"}}>${s.currency}</span>
+                    </div>
+                    ${s.note&&html`<div style=${{color:"#555",fontSize:12,marginTop:4}}>${s.note}</div>`}
+                  </div>
+                  <div style=${{display:"flex",gap:16,alignItems:"center"}}>
+                    <div style=${{textAlign:"right"}}>
+                      <div style=${{color:"#888",fontSize:11,fontFamily:"'DM Mono',monospace"}}>
+                        Sell: ${s.currency==="USD"?fUSD(parseFloat(s.sellPrice)||0):fVND(parseFloat(s.sellPrice)||0)}
+                      </div>
+                      <div style=${{color:"#555",fontSize:11,fontFamily:"'DM Mono',monospace"}}>
+                        Cost: ${s.currency==="USD"?fUSD(totalCost(s)):fVND(totalCost(s))}
+                      </div>
+                      <div style=${{color:profitColor(profit(s)),fontSize:15,fontFamily:"'DM Mono',monospace",fontWeight:500,marginTop:2}}>
+                        ${s.currency==="USD"?fUSD(profit(s)):fVND(profit(s))} profit
+                      </div>
+                    </div>
+                    ${delConfirm===s.id
+                      ? html`<div style=${{display:"flex",gap:6}}>
+                          <button class="btn-danger" onClick=${()=>{save(shipments.filter(x=>x.id!==s.id));setDelConfirm(null);}}>Yes</button>
+                          <button class="btn-small" onClick=${()=>setDelConfirm(null)}>No</button>
+                        </div>`
+                      : html`<button class="del-btn" onClick=${()=>setDelConfirm(s.id)}>✕</button>`
+                    }
+                  </div>
+                </div>`)
+            }
+          </div>
+        </div>
+      `}
+
+      <!-- AI -->
+      ${view==="ai" && html`
+        <div class="content">
+          <div class="ai-tabs">
+            ${aiTools.map(t=>html`
+              <button key=${t.key} class=${`ai-tab ${aiView===t.key?"active":""}`}
+                onClick=${()=>{setAiView(t.key);setAiResult("");}}>
+                ${t.label}
+              </button>`
+            )}
+          </div>
+
+          <!-- Analysis -->
+          ${aiView==="analysis" && html`
+            <div class="card">
+              <div class="card-title">SMART PROFIT ANALYSIS</div>
+              <p style=${{color:"#666",fontSize:13,fontFamily:"'DM Mono',monospace",marginBottom:20,lineHeight:1.6}}>
+                AI reads your full history and identifies your most profitable routes, customers, and modes — with recommendations to grow your margin.
+              </p>
+              <button class="btn-gold-auto" onClick=${runAnalysis} disabled=${aiLoading}>
+                ${aiLoading?"Analysing...":"Run Analysis"}
+              </button>
+              <${AiResult} text=${aiResult} loading=${aiLoading} />
+            </div>
+          `}
+
+          <!-- Margin Advisor -->
+          ${aiView==="margin" && html`
+            <div class="card">
+              <div class="card-title">MARGIN ADVISOR</div>
+              <p style=${{color:"#666",fontSize:13,fontFamily:"'DM Mono',monospace",marginBottom:20,lineHeight:1.6}}>
+                Enter your buy cost and AI suggests a competitive sell price based on mode, route, and your past data.
+              </p>
+              <div class="grid2">
+                <${Field} label="Shipping Mode">
+                  <select value=${marginForm.mode} onChange=${e=>setMarginForm(f=>({...f,mode:e.target.value}))}>
+                    ${MODES.map(m=>html`<option key=${m}>${m}</option>`)}
+                  </select>
+                <//>
+                <${Field} label="Route">
+                  <input value=${marginForm.route} placeholder="e.g. HCM → LAX"
+                    onInput=${e=>setMarginForm(f=>({...f,route:e.target.value}))} />
+                <//>
+                <${Field} label="My Total Buy Cost">
+                  <input type="number" value=${marginForm.buyCost} placeholder="0"
+                    onInput=${e=>setMarginForm(f=>({...f,buyCost:e.target.value}))} />
+                <//>
+                <${Field} label="Currency">
+                  <select value=${marginForm.currency} onChange=${e=>setMarginForm(f=>({...f,currency:e.target.value}))}>
+                    <option>USD</option><option>VND</option>
+                  </select>
+                <//>
+              </div>
+              <${Field} label="Additional Notes (optional)" style=${{marginTop:8}}>
+                <input value=${marginForm.notes} placeholder="e.g. urgent, competitor quoted $2000..."
+                  onInput=${e=>setMarginForm(f=>({...f,notes:e.target.value}))} />
+              <//>
+              <button class="btn-gold-auto" style=${{marginTop:20}} onClick=${runMargin} disabled=${aiLoading}>
+                ${aiLoading?"Thinking...":"Get Price Suggestion"}
+              </button>
+              <${AiResult} text=${aiResult} loading=${aiLoading} />
+            </div>
+          `}
+
+          <!-- Quote Generator -->
+          ${aiView==="quote" && html`
+            <div class="card">
+              <div class="card-title">AI QUOTE GENERATOR</div>
+              <p style=${{color:"#666",fontSize:13,fontFamily:"'DM Mono',monospace",marginBottom:20,lineHeight:1.6}}>
+                Describe a shipment in plain text and AI auto-fills the Add Shipment form for you.
+              </p>
+              <${Field} label="Describe the shipment">
+                <textarea style=${{height:100}} value=${quoteInput}
+                  placeholder=${'e.g. "500kg electronics HCM to LA by air, sell $2000, freight $1400, customs $60"'}
+                  onInput=${e=>setQuoteInput(e.target.value)} />
+              <//>
+              <button class="btn-gold-auto" style=${{marginTop:16}} onClick=${runQuote} disabled=${aiLoading}>
+                ${aiLoading?"Filling form...":"Auto-Fill Form"}
+              </button>
+              <${AiResult} text=${aiResult} loading=${aiLoading} />
+            </div>
+          `}
+
+          <!-- Anomaly Detector -->
+          ${aiView==="anomaly" && html`
+            <div class="card">
+              <div class="card-title">CHARGE ANOMALY DETECTOR</div>
+              <p style=${{color:"#666",fontSize:13,fontFamily:"'DM Mono',monospace",marginBottom:20,lineHeight:1.6}}>
+                AI compares your costs against your history and flags anything unusually high, low, or suspicious.
+              </p>
+              <${Field} label="Filter by customer or route (leave blank to check all recent)">
+                <input value=${anomalyQ} placeholder="e.g. ABC company or HCM-LAX"
+                  onInput=${e=>setAnomalyQ(e.target.value)} />
+              <//>
+              <button class="btn-gold-auto" style=${{marginTop:16}} onClick=${runAnomaly} disabled=${aiLoading}>
+                ${aiLoading?"Scanning...":"Scan for Anomalies"}
+              </button>
+              <${AiResult} text=${aiResult} loading=${aiLoading} />
+            </div>
+          `}
+
+          <!-- Monthly Report -->
+          ${aiView==="report" && html`
+            <div class="card">
+              <div class="card-title">MONTHLY PROFIT REPORT</div>
+              <p style=${{color:"#666",fontSize:13,fontFamily:"'DM Mono',monospace",marginBottom:20,lineHeight:1.6}}>
+                AI generates a full performance report — overview, best deals, weak margins, and next month recommendations.
+              </p>
+              <${Field} label="Select Month">
+                <input type="month" style=${{width:"auto"}} value=${reportMonth}
+                  onChange=${e=>setReportMonth(e.target.value)} />
+              <//>
+              <button class="btn-gold-auto" style=${{marginTop:16}} onClick=${runReport} disabled=${aiLoading}>
+                ${aiLoading?"Writing report...":"Generate Report"}
+              </button>
+              <${AiResult} text=${aiResult} loading=${aiLoading} />
+            </div>
+          `}
+        </div>
+      `}
+    </div>`;
+}
+
+createRoot(document.getElementById("root")).render(html`<${App}/>`);
+</script>
+</body>
+</html>
