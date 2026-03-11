@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "bee-profit-tracker.html", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/", "dest": "/bee-profit-tracker.html" }
+  ]
+}
