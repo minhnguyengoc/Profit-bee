@@ -150,13 +150,20 @@ const emptyForm  = () => ({
 
 // ── Claude API ────────────────────────────────────────────────────────────────
 async function askClaude(system, user) {
-  const res = await fetch("https://api.anthropic.com/v1/messages",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:1000, system, messages:[{role:"user",content:user}] })
+  const res = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "qwen-plus",
+      max_tokens: 1000,
+      messages: [
+        { role: "system", content: system },
+        { role: "user",   content: user }
+      ]
+    })
   });
   const d = await res.json();
-  return d.content?.[0]?.text || "No response.";
+  return d.choices?.[0]?.message?.content || "No response.";
 }
 
 // ── Small components ──────────────────────────────────────────────────────────
